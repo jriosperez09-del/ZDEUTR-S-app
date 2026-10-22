@@ -2,7 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 
 class DefaultFirebaseOptions {
   static const FirebaseOptions currentPlatform = FirebaseOptions(
-    apiKey: "PON-TU-CLAVE-AQUI-CUANDO-LA-TENGAS",
+    apiKey: "AIzaSyC9c3yYqxpbovB2bE28x5c13-emDipxzQg"
     authDomain: "zdeutrs.firebaseapp.com",
     projectId: "zdeutrs",
     storageBucket: "zdeutrs.appspot.com",
