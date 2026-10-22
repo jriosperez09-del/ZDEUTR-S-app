@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'pantalla_registro.dart';
+import 'pantalla_administrador.dart';
 
 void main() {
   runApp(const ZDEUTRSApp());
@@ -93,7 +94,12 @@ class PantallaInicio extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const PantallaAdministrador()),
+                    );
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.red,
                     padding: const EdgeInsets.symmetric(vertical: 18),
