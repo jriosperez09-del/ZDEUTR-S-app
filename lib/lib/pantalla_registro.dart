@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class PantallaRegistro extends StatefulWidget {
   const PantallaRegistro({super.key});
@@ -9,198 +11,185 @@ class PantallaRegistro extends StatefulWidget {
 
 class _PantallaRegistroState extends State<PantallaRegistro> {
   final _formKey = GlobalKey<FormState>();
+  
+  final TextEditingController _nombreCompleto = TextEditingController();
+  final TextEditingController _telefono = TextEditingController();
+  final TextEditingController _correo = TextEditingController();
+  final TextEditingController _contraseña = TextEditingController();
+  final TextEditingController _ruta = TextEditingController();
+  
+  bool _cargando = false;
+
+  Future<void> _registrarUsuario() async {
+    if (_formKey.currentState!.validate()) {
+      setState(() {
+        _cargando = true;
+      });
+
+      try {
+        // Guardar datos en Firebase Firestore
+        await FirebaseFirestore.instance.collection('usuarios').add({
+          'nombreCompleto': _nombreCompleto.text.trim(),
+          'telefono': _telefono.text.trim(),
+          'correo': _correo.text.trim(),
+          'ruta': _ruta.text.trim(),
+          'fechaRegistro': Timestamp.now(),
+          'activo': true,
+        });
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('✅ ¡Registro exitoso! Bienvenido a ZDE UTRS'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 3),
+            ),
+          );
+          // Limpiar formulario
+          _nombreCompleto.clear();
+          _telefono.clear();
+          _correo.clear();
+          _contraseña.clear();
+          _ruta.clear();
+        }
+      } catch (error) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('❌ Error al registrar: $error'),
+              backgroundColor: Colors.red,
+              duration: Duration(seconds: 4),
+            ),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _cargando = false;
+          });
+        }
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
       appBar: AppBar(
-        title: const Text('REGISTRO', style: TextStyle(color: Colors.white)),
-        backgroundColor: Colors.red,
+        title: const Text('Registro de Usuario'),
+        backgroundColor: const Color(0xFF1A237E),
+        foregroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(30),
+        padding: const EdgeInsets.all(24),
         child: Form(
           key: _formKey,
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Center(
-                child: Text(
-                  'Completa tu perfil',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.red,
-                  ),
-                ),
+              const SizedBox(height: 20),
+              const Icon(Icons.person_add, size: 80, color: Color(0xFF1A237E)),
+              const SizedBox(height: 20),
+              const Text(
+                'Completa tus datos',
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF1A237E)),
+                textAlign: TextAlign.center,
               ),
               const SizedBox(height: 30),
-
-              // Nombre completo
-              const Text('Nombre completo', style: TextStyle(color: Colors.white70)),
-              const SizedBox(height: 8),
+              
+              // Nombre Completo
               TextFormField(
-                style: const TextStyle(color: Colors.white),
+                controller: _nombreCompleto,
                 decoration: InputDecoration(
-                  hintText: 'Escribe tu nombre',
-                  hintStyle: const TextStyle(color: Colors.grey),
-                  filled: true,
-                  fillColor: Colors.grey[900],
+                  labelText: 'Nombre Completo',
+                  prefixIcon: const Icon(Icons.person),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  suffixIcon: const Icon(Icons.edit, color: Colors.redAccent),
+                  filled: true,
+                  fillColor: Colors.grey[50],
                 ),
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Por favor escribe tu nombre';
+                  }
+                  return null;
+                },
               ),
-              const SizedBox(height: 15),
-
+              const SizedBox(height: 16),
+              
               // Teléfono
-              const Text('Número de teléfono', style: TextStyle(color: Colors.white70)),
-              const SizedBox(height: 8),
               TextFormField(
+                controller: _telefono,
                 keyboardType: TextInputType.phone,
-                style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
-                  hintText: 'Ej. 4771234567',
-                  hintStyle: const TextStyle(color: Colors.grey),
-                  filled: true,
-                  fillColor: Colors.grey[900],
+                  labelText: 'Teléfono',
+                  prefixIcon: const Icon(Icons.phone),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  suffixIcon: const Icon(Icons.edit, color: Colors.redAccent),
+                  filled: true,
+                  fillColor: Colors.grey[50],
                 ),
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Por favor escribe tu teléfono';
+                  }
+                  return null;
+                },
               ),
-              const SizedBox(height: 15),
-
-              // Confirmar teléfono
-              const Text('Confirmar número de teléfono', style: TextStyle(color: Colors.white70)),
-              const SizedBox(height: 8),
+              const SizedBox(height: 16),
+              
+              // Correo
               TextFormField(
-                keyboardType: TextInputType.phone,
-                style: const TextStyle(color: Colors.white),
+                controller: _correo,
+                keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(
-                  hintText: 'Vuelve a escribir tu número',
-                  hintStyle: const TextStyle(color: Colors.grey),
-                  filled: true,
-                  fillColor: Colors.grey[900],
+                  labelText: 'Correo Electrónico',
+                  prefixIcon: const Icon(Icons.email),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  suffixIcon: const Icon(Icons.edit, color: Colors.redAccent),
+                  filled: true,
+                  fillColor: Colors.grey[50],
                 ),
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Por favor escribe tu correo';
+                  }
+                  return null;
+                },
               ),
-              const SizedBox(height: 15),
-
-              // Tipo de carro
-              const Text('Tipo de carro', style: TextStyle(color: Colors.white70)),
-              const SizedBox(height: 8),
+              const SizedBox(height: 16),
+              
+              // Ruta
               TextFormField(
-                style: const TextStyle(color: Colors.white),
+                controller: _ruta,
                 decoration: InputDecoration(
-                  hintText: 'Marca y modelo',
-                  hintStyle: const TextStyle(color: Colors.grey),
-                  filled: true,
-                  fillColor: Colors.grey[900],
+                  labelText: 'Ruta / Grupo',
+                  prefixIcon: const Icon(Icons.route),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  suffixIcon: const Icon(Icons.edit, color: Colors.redAccent),
-                ),
-              ),
-              const SizedBox(height: 15),
-
-              // Color del carro
-              const Text('Color del carro', style: TextStyle(color: Colors.white70)),
-              const SizedBox(height: 8),
-              TextFormField(
-                style: const TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  hintText: 'Color visible del vehículo',
-                  hintStyle: const TextStyle(color: Colors.grey),
                   filled: true,
-                  fillColor: Colors.grey[900],
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  suffixIcon: const Icon(Icons.edit, color: Colors.redAccent),
+                  fillColor: Colors.grey[50],
                 ),
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Por favor escribe tu ruta o grupo';
+                  }
+                  return null;
+                },
               ),
-              const SizedBox(height: 15),
-
-              // Placas
-              const Text('Número de placas', style: TextStyle(color: Colors.white70)),
-              const SizedBox(height: 8),
-              TextFormField(
-                style: const TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  hintText: 'Identificación oficial',
-                  hintStyle: const TextStyle(color: Colors.grey),
-                  filled: true,
-                  fillColor: Colors.grey[900],
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  suffixIcon: const Icon(Icons.edit, color: Colors.redAccent),
-                ),
-              ),
-              const SizedBox(height: 15),
-
-              // Grupo
-              const Text('Grupo', style: TextStyle(color: Colors.white70)),
-              const SizedBox(height: 8),
-              TextFormField(
-                style: const TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  hintText: 'Ejemplo: Grupo Ruta Norte',
-                  hintStyle: const TextStyle(color: Colors.grey),
-                  filled: true,
-                  fillColor: Colors.grey[900],
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  suffixIcon: const Icon(Icons.edit, color: Colors.redAccent),
-                ),
-              ),
-              const SizedBox(height: 15),
-
-              // Colectivo
-              const Text('Colectivo', style: TextStyle(color: Colors.white70)),
-              const SizedBox(height: 8),
-              TextFormField(
-                style: const TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  hintText: 'Ejemplo: Los Halcones',
-                  hintStyle: const TextStyle(color: Colors.grey),
-                  filled: true,
-                  fillColor: Colors.grey[900],
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  suffixIcon: const Icon(Icons.edit, color: Colors.redAccent),
-                ),
-              ),
-              const SizedBox(height: 15),
-
-              // Contacto de emergencia
-              const Text('Contacto de emergencia', style: TextStyle(color: Colors.white70)),
-              const SizedBox(height: 8),
-              TextFormField(
-                style: const TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  hintText: 'Nombre y teléfono de confianza',
-                  hintStyle: const TextStyle(color: Colors.grey),
-                  filled: true,
-                  fillColor: Colors.grey[900],
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  suffixIcon: const Icon(Icons.edit, color: Colors.redAccent),
-                ),
-              ),
-              const SizedBox(height: 25),
-
-              // Botón enviar
+              const SizedBox(height: 24),
+              
+              // Botón Registrar
               SizedBox(
-                width: double.infinity,
+                height: 55,
                 child: ElevatedButton(
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {}
-                  },
+                  onPressed: _cargando ? null : _registrarUsuario,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    padding: const EdgeInsets.symmetric(vertical: 18),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
+                    backgroundColor: const Color(0xFF1A237E),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
-                  child: const Text(
-                    'ENVIAR REGISTRO',
-                    style: TextStyle(fontSize: 18, color: Colors.white),
-                  ),
+                  child: _cargando
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text(
+                          'REGISTRARME',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
                 ),
               ),
             ],
